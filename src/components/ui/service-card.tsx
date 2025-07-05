@@ -3,16 +3,16 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
 
 interface ServiceCardProps {
   title: string;
   description: string;
   icon: string;
   index: number;
+  onLearnMore?: () => void;
 }
 
-export const ServiceCard = ({ title, description, icon, index }: ServiceCardProps) => {
+export const ServiceCard = ({ title, description, icon, index, onLearnMore }: ServiceCardProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 50 }}
@@ -32,11 +32,13 @@ export const ServiceCard = ({ title, description, icon, index }: ServiceCardProp
         </CardHeader>
         <CardContent className="text-center">
           <p className="text-gray-600 mb-8">{description}</p>
-          <Button variant="ghost" className="text-blue-600 group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors duration-300 hover:translate-x-1" asChild>
-            <Link to={`/services#${title.toLowerCase().replace(/\s+/g, '-')}`}>
-              Learn More
-              <ArrowRight className="ml-2 w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
-            </Link>
+          <Button 
+            variant="ghost" 
+            className="text-blue-600 group-hover:bg-blue-50 group-hover:text-blue-700 transition-colors duration-300 hover:translate-x-1"
+            onClick={onLearnMore}
+          >
+            Learn More
+            <ArrowRight className="ml-2 w-4 h-4 opacity-70 group-hover:opacity-100 transition-opacity duration-300" />
           </Button>
         </CardContent>
       </Card>
