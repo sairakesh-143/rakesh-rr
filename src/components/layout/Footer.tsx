@@ -41,9 +41,8 @@ export const Footer = () => {
           </div>
 
           <div>
-            <h4 className="text-lg font-semibold mb-4">Patient Portal</h4>
+            <h4 className="text-lg font-semibold mb-4">Patient Resources</h4>
             <ul className="space-y-2">
-              <li><Link to="/patient-portal" className="text-gray-300 hover:text-blue-400 transition-colors">Portal Home</Link></li>
               <li><Link to="/health-records" className="text-gray-300 hover:text-blue-400 transition-colors">Health Records</Link></li>
               <li><Link to="/profile" className="text-gray-300 hover:text-blue-400 transition-colors">My Profile</Link></li>
               <li><Link to="/login" className="text-gray-300 hover:text-blue-400 transition-colors">Login / Sign Up</Link></li>

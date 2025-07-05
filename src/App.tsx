@@ -21,7 +21,6 @@ import DoctorProfilePage from "./pages/DoctorProfilePage";
 import ContactPage from "./pages/ContactPage";
 import LoginPage from "./pages/LoginPage";
 import AppointmentPage from "./pages/AppointmentPage";
-import PatientPortalPage from "./pages/PatientPortalPage";
 import HealthRecordsPage from "./pages/HealthRecordsPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotFound from "./pages/NotFound";
@@ -103,7 +102,6 @@ const App = () => {
                     <Route path="/contact" element={<ContactPage />} />
                     <Route path="/login" element={<LoginPage />} />
                     <Route path="/appointments" element={<AppointmentPage />} />
-                    <Route path="/patient-portal" element={<PatientPortalPage />} />
                     <Route path="/health-records" element={<HealthRecordsPage />} />
                     <Route path="/profile" element={<ProfilePage />} />
                     <Route path="*" element={<NotFound />} />
