@@ -5,6 +5,7 @@ import { DoctorCard } from '@/components/ui/doctor-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import FirebaseTest from '@/components/FirebaseTest';
 import { 
   ArrowRight, Heart, Shield, Clock, Users, Calendar, 
   FileText, MessageCircle, Phone, MapPin, Mail,
@@ -77,6 +78,11 @@ const doctors = [
 const HomePage = () => {
   return (
     <div className="min-h-screen">
+      {/* Firebase Test - Remove after debugging */}
+      <div className="container mx-auto px-4 py-4">
+        <FirebaseTest />
+      </div>
+      
       {/* Hero Section */}
       <section className="relative bg-gradient-to-r from-blue-600 to-blue-800 text-white py-20 overflow-hidden">
         <motion.div
