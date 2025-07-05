@@ -188,15 +188,6 @@ const HomePage = () => {
                     <ChevronRight className="w-5 h-5 opacity-75" />
                   </Link>
                 </Button>
-                <Button variant="ghost" className="w-full justify-between text-white hover:bg-white/20 transition-all duration-300 py-3 pl-4" asChild>
-                  <Link to="/patient-portal">
-                    <div className="flex items-center">
-                      <FileText className="mr-3 w-5 h-5 text-yellow-200" />
-                      <span>Patient Portal</span>
-                    </div>
-                    <ChevronRight className="w-5 h-5 opacity-75" />
-                  </Link>
-                </Button>
               </div>
               
               {/* Opening Hours - Redesigned */}
