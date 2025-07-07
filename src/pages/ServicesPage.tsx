@@ -3,9 +3,9 @@ import { motion } from 'framer-motion';
 import { ServiceCard } from '@/components/ui/service-card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 const services = [
   {
@@ -180,6 +180,34 @@ const ServicesPage = () => {
     setSelectedService(service);
     setIsDialogOpen(true);
   };
+  
+  // Get location for monitoring URL changes
+  const location = useLocation();
+  
+  // Handle fragment identifiers from the URL (e.g., /services#cardiology)
+  useEffect(() => {
+    const hashValue = window.location.hash.slice(1).toLowerCase();
+    if (hashValue) {
+      // Find the service that matches the hash
+      const service = services.find(
+        (s) => s.title.toLowerCase() === hashValue || s.title.toLowerCase().replace(/\s+/g, '-') === hashValue
+      );
+      
+      if (service) {
+        // Scroll to the element with ID matching the hash
+        const element = document.getElementById(hashValue);
+        if (element) {
+          // Wait a bit for the page to render before scrolling
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 300);
+        }
+        
+        setSelectedService(service);
+        setIsDialogOpen(true);
+      }
+    }
+  }, [location.hash]); // Re-run when the hash part of the URL changes
 
   return (
     <div className="min-h-screen py-12">
@@ -198,19 +226,27 @@ const ServicesPage = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {services.map((service, index) => (
-            <ServiceCard
-              key={index}
-              title={service.title}
-              description={service.description}
-              icon={service.icon}
-              index={index}
-              onLearnMore={() => handleLearnMore(service)}
-            />
+            <div key={index} id={service.title.toLowerCase().replace(/\s+/g, '-')}>
+              <ServiceCard
+                title={service.title}
+                description={service.description}
+                icon={service.icon}
+                index={index}
+                onLearnMore={() => handleLearnMore(service)}
+              />
+            </div>
           ))}
         </div>
       </div>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        // Remove hash from URL when closing dialog to avoid reopening
+        if (!open && window.location.hash) {
+          // Use history.replaceState to change URL without reloading
+          window.history.replaceState(null, '', window.location.pathname);
+        }
+      }}>
         {selectedService && (
           <DialogContent className="max-w-3xl">
             <DialogHeader>

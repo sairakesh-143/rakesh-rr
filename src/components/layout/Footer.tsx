@@ -1,6 +1,7 @@
 
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { Facebook, Twitter, Instagram } from 'lucide-react';
 
 export const Footer = () => {
   return (
@@ -17,15 +18,15 @@ export const Footer = () => {
               Providing world-class healthcare services with compassion and excellence.
             </p>
             <div className="flex space-x-4">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold">FB</span>
-              </div>
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold">TW</span>
-              </div>
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold">IG</span>
-              </div>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="w-10 h-10 bg-blue-600 hover:bg-blue-700 transition-colors rounded-full flex items-center justify-center">
+                <Facebook size={18} />
+              </a>
+              <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" aria-label="Twitter" className="w-10 h-10 bg-blue-600 hover:bg-blue-700 transition-colors rounded-full flex items-center justify-center">
+                <Twitter size={18} />
+              </a>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="w-10 h-10 bg-blue-600 hover:bg-blue-700 transition-colors rounded-full flex items-center justify-center">
+                <Instagram size={18} />
+              </a>
             </div>
           </div>
 
@@ -52,26 +53,34 @@ export const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Departments</h4>
             <ul className="space-y-2">
-              <li className="text-gray-300">Cardiology</li>
-              <li className="text-gray-300">Neurology</li>
-              <li className="text-gray-300">Orthopedics</li>
-              <li className="text-gray-300">Pediatrics</li>
+              <li><Link to="/services#cardiology" className="text-gray-300 hover:text-blue-400 transition-colors">Cardiology</Link></li>
+              <li><Link to="/services#neurology" className="text-gray-300 hover:text-blue-400 transition-colors">Neurology</Link></li>
+              <li><Link to="/services#orthopedics" className="text-gray-300 hover:text-blue-400 transition-colors">Orthopedics</Link></li>
+              <li><Link to="/services#pediatrics" className="text-gray-300 hover:text-blue-400 transition-colors">Pediatrics</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="text-lg font-semibold mb-4">Contact Info</h4>
             <div className="space-y-2 text-gray-300">
-              <p>📍 123 Healthcare St, Medical City</p>
-              <p>📞 +1 (555) 123-4567</p>
-              <p>✉️ info@carehub.com</p>
-              <p>🕐 24/7 Emergency Care</p>
+              <a href="https://maps.google.com/?q=123+Healthcare+St,+Medical+City" target="_blank" rel="noopener noreferrer" className="flex hover:text-blue-400 transition-colors">
+                <span>📍 123 Healthcare St, Medical City</span>
+              </a>
+              <a href="tel:+15551234567" className="flex hover:text-blue-400 transition-colors">
+                <span>📞 +1 (555) 123-4567</span>
+              </a>
+              <a href="mailto:info@carehub.com" className="flex hover:text-blue-400 transition-colors">
+                <span>✉️ info@carehub.com</span>
+              </a>
+              <Link to="/contact" className="flex hover:text-blue-400 transition-colors">
+                <span>🕐 24/7 Emergency Care</span>
+              </Link>
             </div>
           </div>
         </div>
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
-          <p>&copy; 2024 CareHub Hospital. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} <Link to="/" className="hover:text-blue-400 transition-colors">CareHub Hospital</Link>. All rights reserved.</p>
         </div>
       </div>
     </motion.footer>
