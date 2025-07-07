@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { collection, getDocs, doc, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, updateDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
-import { Calendar, Clock, User, Stethoscope, CheckCircle, XCircle } from 'lucide-react';
+import { Calendar, Clock, User, Stethoscope, CheckCircle, XCircle, Bell } from 'lucide-react';
 
 interface Appointment {
   id: string;
@@ -22,6 +22,7 @@ interface Appointment {
   symptoms: string;
   status: 'pending' | 'confirmed' | 'cancelled';
   createdAt: any;
+  userId?: string; // Add userId field for notifications
 }
 
 const departmentNames: Record<string, string> = {
@@ -79,9 +80,18 @@ const AdminAppointments = () => {
 
   const updateAppointmentStatus = async (appointmentId: string, status: 'confirmed' | 'cancelled') => {
     try {
+      const appointment = appointments.find(apt => apt.id === appointmentId);
+      if (!appointment) return;
+
+      // Update appointment status
       await updateDoc(doc(db, 'appointments', appointmentId), {
-        status: status
+        status: status,
+        updatedAt: serverTimestamp(),
+        ...(status === 'confirmed' && { confirmedAt: serverTimestamp() })
       });
+
+      // Send notification to user
+      await sendNotificationToUser(appointment, status);
 
       setAppointments(prev => 
         prev.map(apt => 
@@ -91,7 +101,7 @@ const AdminAppointments = () => {
 
       toast({
         title: "Success",
-        description: `Appointment ${status} successfully`,
+        description: `Appointment ${status} successfully. Notification sent to patient.`,
       });
     } catch (error) {
       console.error('Error updating appointment:', error);
@@ -103,13 +113,59 @@ const AdminAppointments = () => {
     }
   };
 
+  const sendNotificationToUser = async (appointment: Appointment, status: 'confirmed' | 'cancelled') => {
+    try {
+      const doctorName = doctorNames[appointment.doctor] || appointment.doctor;
+      const departmentName = departmentNames[appointment.department] || appointment.department;
+      
+      let message: string;
+      let notificationType: string;
+
+      if (status === 'confirmed') {
+        message = `Hello ${appointment.patientName}, your appointment on ${format(new Date(appointment.date), 'MMMM dd, yyyy')} at ${appointment.time} with ${doctorName} (${departmentName}) has been confirmed. Thank you for choosing Dream Team Services Hospital!`;
+        notificationType = 'appointment-confirmed';
+      } else {
+        message = `Hello ${appointment.patientName}, your appointment on ${format(new Date(appointment.date), 'MMMM dd, yyyy')} at ${appointment.time} with ${doctorName} has been cancelled. Please contact us to reschedule.`;
+        notificationType = 'appointment-cancelled';
+      }
+
+      await addDoc(collection(db, 'notifications'), {
+        userId: appointment.userId || appointment.patientEmail, // Use userId or email as fallback
+        patientName: appointment.patientName,
+        patientEmail: appointment.patientEmail,
+        appointmentId: appointment.id,
+        type: notificationType,
+        title: `Appointment ${status === 'confirmed' ? 'Confirmed' : 'Cancelled'}`,
+        message: message,
+        createdAt: serverTimestamp(),
+        read: false,
+        appointment: {
+          doctor: doctorName,
+          department: departmentName,
+          date: appointment.date,
+          time: appointment.time
+        }
+      });
+    } catch (error) {
+      console.error('Error sending notification:', error);
+    }
+  };
+
   const rescheduleAppointment = async (appointmentId: string, newDate: string, newTime: string) => {
     try {
+      const appointment = appointments.find(apt => apt.id === appointmentId);
+      if (!appointment) return;
+
       await updateDoc(doc(db, 'appointments', appointmentId), {
         date: newDate,
         time: newTime,
-        status: 'confirmed' // Auto-confirm when rescheduled by admin
+        status: 'confirmed', // Auto-confirm when rescheduled by admin
+        updatedAt: serverTimestamp(),
+        confirmedAt: serverTimestamp()
       });
+
+      // Send reschedule notification
+      await sendRescheduleNotification(appointment, newDate, newTime);
 
       setAppointments(prev => 
         prev.map(apt => 
@@ -119,7 +175,7 @@ const AdminAppointments = () => {
 
       toast({
         title: "Success",
-        description: "Appointment rescheduled successfully",
+        description: "Appointment rescheduled successfully. Notification sent to patient.",
       });
     } catch (error) {
       console.error('Error rescheduling appointment:', error);
@@ -128,6 +184,35 @@ const AdminAppointments = () => {
         description: "Failed to reschedule appointment",
         variant: "destructive"
       });
+    }
+  };
+
+  const sendRescheduleNotification = async (appointment: Appointment, newDate: string, newTime: string) => {
+    try {
+      const doctorName = doctorNames[appointment.doctor] || appointment.doctor;
+      const departmentName = departmentNames[appointment.department] || appointment.department;
+      
+      const message = `Hello ${appointment.patientName}, your appointment with ${doctorName} (${departmentName}) has been rescheduled to ${format(new Date(newDate), 'MMMM dd, yyyy')} at ${newTime}. Your appointment is confirmed. Thank you for choosing Dream Team Services Hospital!`;
+
+      await addDoc(collection(db, 'notifications'), {
+        userId: appointment.userId || appointment.patientEmail,
+        patientName: appointment.patientName,
+        patientEmail: appointment.patientEmail,
+        appointmentId: appointment.id,
+        type: 'appointment-rescheduled',
+        title: 'Appointment Rescheduled',
+        message: message,
+        createdAt: serverTimestamp(),
+        read: false,
+        appointment: {
+          doctor: doctorName,
+          department: departmentName,
+          date: newDate,
+          time: newTime
+        }
+      });
+    } catch (error) {
+      console.error('Error sending reschedule notification:', error);
     }
   };
 

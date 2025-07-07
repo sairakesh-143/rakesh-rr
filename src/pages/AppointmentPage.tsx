@@ -10,7 +10,7 @@ import { DateTimeSelector } from '@/components/appointment/DateTimeSelector';
 import { PatientDetailsForm } from '@/components/appointment/PatientDetailsForm';
 import { AppointmentSummary } from '@/components/appointment/AppointmentSummary';
 import { useToast } from '@/hooks/use-toast';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuthStore } from '@/store/authStore';
 
@@ -92,13 +92,13 @@ const AppointmentPage = () => {
         ...appointmentData,
         userId: user.uid,
         status: 'pending',
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
         date: appointmentData.date?.toISOString()
       });
 
       toast({
         title: "Appointment Booked!",
-        description: "Your appointment has been successfully scheduled. You will receive a confirmation email shortly."
+        description: "Your appointment has been submitted and is pending confirmation. You will receive a notification once it's confirmed by our staff."
       });
 
       // Reset form

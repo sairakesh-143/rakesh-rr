@@ -2,15 +2,18 @@
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { useNotifications } from '@/hooks/use-notifications';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { User, LogOut, Calendar, Search, ChevronDown } from 'lucide-react';
+import { User, LogOut, Calendar, Search, ChevronDown, Bell } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 
 export const Header = () => {
   const { user, setUser } = useAuthStore();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -84,9 +87,14 @@ export const Header = () => {
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem asChild>
-                      <Link to="/appointments" className="flex items-center gap-2 cursor-pointer">
+                      <Link to="/my-appointments" className="flex items-center gap-2 cursor-pointer">
                         <Calendar className="w-4 h-4" />
                         My Appointments
+                        {unreadCount > 0 && (
+                          <Badge variant="destructive" className="ml-auto text-xs">
+                            {unreadCount}
+                          </Badge>
+                        )}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
