@@ -1,10 +1,35 @@
 
 import React from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { Calendar, Users, Settings, Home, UserCheck, BarChart3, Bell, Stethoscope, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAdminAuthStore } from '@/store/adminAuth';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/lib/firebase';
+import { toast } from '@/hooks/use-toast';
 
 export const AdminLayout = () => {
+  const navigate = useNavigate();
+  const { logout, adminData } = useAdminAuthStore();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      logout();
+      toast({
+        title: "Logged out",
+        description: "You have been logged out of the admin portal.",
+      });
+      navigate('/admin/login');
+    } catch (error) {
+      console.error('Logout error:', error);
+      toast({
+        title: "Error",
+        description: "Failed to logout. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   return (
     <div className="min-h-screen gradient-secondary">
       {/* Professional Header with Navigation */}
@@ -16,6 +41,11 @@ export const AdminLayout = () => {
               <div className="gradient-primary text-white px-6 py-3 rounded-xl font-bold text-xl shadow-professional">
                 CareHub Admin
               </div>
+              {adminData && (
+                <div className="text-sm text-muted-foreground">
+                  Welcome, {adminData.name || adminData.email}
+                </div>
+              )}
             </div>
 
             {/* Navigation Menu */}
@@ -120,10 +150,10 @@ export const AdminLayout = () => {
                 variant="outline"
                 size="sm"
                 className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-smooth"
-                onClick={() => window.location.href = '/'}
+                onClick={handleLogout}
               >
                 <LogOut className="w-4 h-4 mr-2" />
-                Exit Admin
+                Logout
               </Button>
             </div>
           </div>

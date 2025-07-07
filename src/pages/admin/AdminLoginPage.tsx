@@ -9,10 +9,11 @@ import { useState } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
+import { useAdminAuthStore } from '@/store/adminAuth';
 import { toast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Shield } from 'lucide-react';
+import { Shield, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const adminLoginSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -24,7 +25,7 @@ type AdminLoginForm = z.infer<typeof adminLoginSchema>;
 const AdminLoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser } = useAuthStore();
+  const { setUser, checkAdminAccess } = useAdminAuthStore();
 
   const form = useForm<AdminLoginForm>({
     resolver: zodResolver(adminLoginSchema)
@@ -33,13 +34,28 @@ const AdminLoginPage = () => {
   const handleAdminLogin = async (data: AdminLoginForm) => {
     setIsLoading(true);
     try {
+      // First authenticate with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
-      setUser(userCredential.user);
-      toast({
-        title: "Admin access granted",
-        description: "Welcome to the admin dashboard.",
-      });
-      navigate('/admin');
+      
+      // Then check if user is registered as admin in Firestore
+      const isAdmin = await checkAdminAccess(userCredential.user);
+      
+      if (isAdmin) {
+        setUser(userCredential.user);
+        toast({
+          title: "Admin access granted",
+          description: "Welcome to the admin dashboard.",
+        });
+        navigate('/admin');
+      } else {
+        // Sign out the user if they're not an admin
+        await auth.signOut();
+        toast({
+          title: "Access denied",
+          description: "This account is not registered as an admin user.",
+          variant: "destructive"
+        });
+      }
     } catch (error: any) {
       console.error('Admin login error:', error);
       let errorMessage = error.message;
@@ -86,6 +102,13 @@ const AdminLoginPage = () => {
           </CardHeader>
           
           <CardContent className="space-y-6">
+            <Alert>
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Only registered administrators can access this portal. Your credentials must be pre-registered in the system database.
+              </AlertDescription>
+            </Alert>
+
             <form onSubmit={form.handleSubmit(handleAdminLogin)} className="space-y-4">
               <div className="space-y-2">
                 <div className="relative">

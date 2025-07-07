@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { useAuthStore } from "@/store/authStore";
+import { useAdminAuthStore } from "@/store/adminAuth";
 
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
@@ -40,7 +41,7 @@ const queryClient = new QueryClient();
 
 // Admin route protection component
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading } = useAuthStore();
+  const { isAdminAuthenticated, isLoading } = useAdminAuthStore();
   
   if (isLoading) {
     return <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
@@ -48,7 +49,7 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
     </div>;
   }
   
-  if (!user) {
+  if (!isAdminAuthenticated) {
     return <Navigate to="/admin/login" replace />;
   }
   
@@ -57,15 +58,23 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
   const { setUser, setLoading } = useAuthStore();
+  const { setUser: setAdminUser, checkAdminAccess } = useAdminAuthStore();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
+      
+      // Check admin access when user state changes
+      if (user) {
+        await checkAdminAccess(user);
+      } else {
+        setAdminUser(null);
+      }
     });
 
     return () => unsubscribe();
-  }, [setUser, setLoading]);
+  }, [setUser, setLoading, setAdminUser, checkAdminAccess]);
 
   return (
     <QueryClientProvider client={queryClient}>
