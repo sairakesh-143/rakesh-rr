@@ -41,12 +41,7 @@ const queryClient = new QueryClient();
 
 // Admin route protection component
 const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAdminAuthenticated, isLoading, clearAuthState } = useAdminAuthStore();
-  
-  // Clear admin auth state on mount to force re-login
-  useEffect(() => {
-    clearAuthState();
-  }, [clearAuthState]);
+  const { isAdminAuthenticated, isLoading } = useAdminAuthStore();
   
   if (isLoading) {
     return <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center">
@@ -70,18 +65,17 @@ const App = () => {
       setUser(user);
       setLoading(false);
       
-      // Always clear admin state on auth change to prevent session persistence
-      clearAuthState();
-      
-      // Only check admin access if user is authenticated and accessing admin routes
-      if (user && window.location.pathname.startsWith('/admin')) {
-        // Don't auto-authenticate admin - require explicit login
-        console.log('Admin route accessed, clearing admin state');
-        clearAuthState();
-      } else if (user) {
-        setAdminUser(user);
+      // Check if user has admin access and update admin state accordingly
+      if (user) {
+        const hasAdminAccess = await checkAdminAccess(user);
+        if (hasAdminAccess) {
+          setAdminUser(user);
+        } else {
+          setAdminUser(null);
+        }
       } else {
         setAdminUser(null);
+        clearAuthState();
       }
     });
 

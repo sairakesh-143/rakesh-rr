@@ -35,7 +35,7 @@ export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
   user: null,
   adminData: null,
   isAdminAuthenticated: false,
-  isLoading: true,
+  isLoading: false,
   
   setUser: (user) => {
     set({ user });

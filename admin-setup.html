@@ -99,7 +99,7 @@
         <div class="step">
             <h3>Step 3: Access Admin Portal</h3>
             <p>Once created, you can access the admin portal at:</p>
-            <p><strong>URL:</strong> <a href="http://localhost:8082/admin/login" target="_blank">http://localhost:8082/admin/login</a></p>
+            <p><strong>URL:</strong> <a href="http://localhost:5173/admin/login" target="_blank">http://localhost:5173/admin/login</a></p>
         </div>
 
         <div id="result"></div>
@@ -121,14 +121,14 @@
         import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
         import { getFirestore, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
 
-        // Firebase configuration - Replace with your actual config
+        // Firebase configuration
         const firebaseConfig = {
-            apiKey: "your-api-key-here",
-            authDomain: "your-project.firebaseapp.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project.appspot.com",
-            messagingSenderId: "your-sender-id",
-            appId: "your-app-id"
+            apiKey: "AIzaSyD6FrNuqeBrfrwhZnulwDp4lC3lgt6hzck",
+            authDomain: "hospital-149b6.firebaseapp.com",
+            projectId: "hospital-149b6",
+            storageBucket: "hospital-149b6.firebasestorage.app",
+            messagingSenderId: "822650817761",
+            appId: "1:822650817761:web:adc3079d5e1e249d033ba0"
         };
 
         const app = initializeApp(firebaseConfig);
@@ -190,7 +190,7 @@
                         <p><strong>Email:</strong> ${adminEmail}</p>
                         <p><strong>Password:</strong> ${adminPassword}</p>
                         <p><strong>User ID:</strong> ${user.uid}</p>
-                        <p><strong>Admin Portal:</strong> <a href="http://localhost:8082/admin/login" target="_blank">http://localhost:8082/admin/login</a></p>
+                        <p><strong>Admin Portal:</strong> <a href="http://localhost:5173/admin/login" target="_blank">http://localhost:5173/admin/login</a></p>
                     </div>
                 `;
 
