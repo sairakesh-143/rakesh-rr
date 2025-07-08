@@ -7,8 +7,8 @@ A comprehensive, modern hospital website built with React, TypeScript, and Fireb
 - **Admin Portal:** `http://localhost:8082/admin/login`
 
 ## 👤 Admin Access
-- **Email:** `dwarampudisai@gmail.com`
-- **Password:** `rakesh@123`
+- **Email:** `dwarampudirakesh@gmail.com`
+- **Password:** `rakesh@1234`
 
 ## ✨ Features
 
@@ -83,7 +83,7 @@ A comprehensive, modern hospital website built with React, TypeScript, and Fireb
 
 ### Manual Setup
 1. Go to Firebase Console → Authentication
-2. Add user: `dwarampudisai@gmail.com` / `rakesh@123`
+2. Add user: `dwarampudirakesh@gmail.com` / `rakesh@1234`
 3. In Firestore, create `admins` collection
 4. Add document with admin permissions
 

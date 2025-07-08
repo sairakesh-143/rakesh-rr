@@ -4,8 +4,8 @@
 async function createAdminUser() {
     console.log('🏥 Creating admin user for Hospital Website...');
     
-    const adminEmail = "dwarampudisai@gmail.com";
-    const adminPassword = "rakesh@123";
+    const adminEmail = "dwarampudirakesh@gmail.com";
+    const adminPassword = "rakesh@1234";
     
     try {
         // Import Firebase functions (assuming they're available globally)
@@ -80,8 +80,8 @@ async function createAdminUser() {
 
 // Run the admin setup
 console.log('🚀 Starting admin user setup...');
-console.log('📧 Admin Email: dwarampudisai@gmail.com');
-console.log('🔑 Admin Password: rakesh@123');
+console.log('📧 Admin Email: dwarampudirakesh@gmail.com');
+console.log('🔑 Admin Password: rakesh@1234');
 console.log('');
 
 createAdminUser().then(result => {
@@ -89,7 +89,7 @@ createAdminUser().then(result => {
         console.log('');
         console.log('🎯 Next Steps:');
         console.log('  1. Go to: http://localhost:8082/admin/login');
-        console.log('  2. Login with: dwarampudisai@gmail.com / rakesh@123');
+        console.log('  2. Login with: dwarampudirakesh@gmail.com / rakesh@1234');
         console.log('  3. Start managing your hospital system!');
     }
 });

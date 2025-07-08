@@ -3,6 +3,10 @@ import { User } from 'firebase/auth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+// Hardcoded admin credentials for maximum security
+const ADMIN_EMAIL = 'dwarampudirakesh@gmail.com';
+const ADMIN_PASSWORD = 'rakesh@1234';
+
 interface AdminUser {
   uid: string;
   email: string;
@@ -22,8 +26,9 @@ interface AdminAuthState {
   setUser: (user: User | null) => void;
   setAdminData: (adminData: AdminUser | null) => void;
   setLoading: (loading: boolean) => void;
-  checkAdminAccess: (user: User) => Promise<boolean>;
+  checkAdminAccess: (user: User, password?: string) => Promise<boolean>;
   logout: () => void;
+  clearAuthState: () => void;
 }
 
 export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
@@ -48,9 +53,39 @@ export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
   
   setLoading: (isLoading) => set({ isLoading }),
   
-  checkAdminAccess: async (user: User) => {
+  checkAdminAccess: async (user: User, password?: string) => {
     try {
       set({ isLoading: true });
+      
+      // First check if email matches exactly (case-sensitive)
+      if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        console.warn('Unauthorized admin login attempt:', user.email);
+        set({ 
+          adminData: null, 
+          isAdminAuthenticated: false 
+        });
+        return false;
+      }
+      
+      // Additional strict email validation
+      if (user.email !== ADMIN_EMAIL) {
+        console.warn('Email case mismatch for admin login:', user.email);
+        set({ 
+          adminData: null, 
+          isAdminAuthenticated: false 
+        });
+        return false;
+      }
+      
+      // Check if password matches (if provided)
+      if (password && password !== ADMIN_PASSWORD) {
+        console.warn('Invalid password for admin login');
+        set({ 
+          adminData: null, 
+          isAdminAuthenticated: false 
+        });
+        return false;
+      }
       
       // Check if user exists in admins collection
       const adminDocRef = doc(db, 'admins', user.uid);
@@ -58,6 +93,16 @@ export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
       
       if (adminDoc.exists()) {
         const adminData = adminDoc.data() as AdminUser;
+        
+        // Triple-check email in Firestore data
+        if (adminData.email !== ADMIN_EMAIL) {
+          console.warn('Admin email mismatch in Firestore:', adminData.email);
+          set({ 
+            adminData: null, 
+            isAdminAuthenticated: false 
+          });
+          return false;
+        }
         
         // Check if admin is active
         if (adminData.isActive) {
@@ -106,6 +151,15 @@ export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
   },
   
   logout: () => {
+    set({ 
+      user: null, 
+      adminData: null, 
+      isAdminAuthenticated: false,
+      isLoading: false 
+    });
+  },
+  
+  clearAuthState: () => {
     set({ 
       user: null, 
       adminData: null, 
