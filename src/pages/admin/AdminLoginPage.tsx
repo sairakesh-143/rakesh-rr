@@ -52,7 +52,7 @@ const AdminLoginPage = () => {
     setIsLoading(true);
     try {
       // Validate credentials client-side first
-      if (data.email !== 'dwarampudirakesh@gmail.com' || data.password !== 'rakesh@1234') {
+      if (data.email !== 'admin.temp.1751968826962@hospital.com' || data.password !== 'rakesh@123') {
         toast({
           title: "Access denied",
           description: "Invalid admin credentials. Only authorized administrators can access this portal.",

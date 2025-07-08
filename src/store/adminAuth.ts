@@ -4,8 +4,8 @@ import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // Hardcoded admin credentials for maximum security
-const ADMIN_EMAIL = 'dwarampudirakesh@gmail.com';
-const ADMIN_PASSWORD = 'rakesh@1234';
+const ADMIN_EMAIL = 'admin.temp.1751968826962@hospital.com';
+const ADMIN_PASSWORD = 'rakesh@123';
 
 interface AdminUser {
   uid: string;

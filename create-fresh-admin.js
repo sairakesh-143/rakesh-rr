@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, updatePassword, sendPasswordResetEmail } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 
 // Firebase configuration
 const firebaseConfig = {
@@ -19,35 +19,29 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Admin credentials
-const ADMIN_EMAIL = 'admin.temp.1751968826962@hospital.com';
+const ADMIN_EMAIL = 'dwarampudisai@gmail.com';
 const ADMIN_PASSWORD = 'rakesh@123';
 
-async function registerAdmin() {
+async function createFreshAdmin() {
   try {
-    console.log('🔐 Registering admin user...');
+    console.log('🔄 Creating fresh admin user...');
     
-    let userCredential;
+    // Use a temporary unique email for the new admin
+    const tempEmail = 'admin.temp.' + Date.now() + '@hospital.com';
     
-    try {
-      // Try to create new user
-      userCredential = await createUserWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
-      console.log('✅ Admin user created successfully');
-    } catch (error) {
-      if (error.code === 'auth/email-already-in-use') {
-        console.log('👤 Admin user already exists, signing in...');
-        userCredential = await signInWithEmailAndPassword(auth, ADMIN_EMAIL, ADMIN_PASSWORD);
-        console.log('✅ Admin user signed in successfully');
-      } else {
-        throw error;
-      }
-    }
+    console.log('📧 Creating temporary admin with email:', tempEmail);
     
+    // Create the admin user with temporary email
+    const userCredential = await createUserWithEmailAndPassword(auth, tempEmail, ADMIN_PASSWORD);
     const user = userCredential.user;
     
-    // Create admin document in Firestore
+    console.log('✅ Admin user created successfully');
+    
+    // Create admin document in Firestore with the desired email
     const adminData = {
       uid: user.uid,
-      email: ADMIN_EMAIL,
+      email: ADMIN_EMAIL, // Use the desired email in the database
+      tempEmail: tempEmail, // Store the actual auth email for reference
       name: 'Rakesh Dwarampu',
       role: 'super_admin',
       isActive: true,
@@ -67,26 +61,33 @@ async function registerAdmin() {
     await setDoc(doc(db, 'admins', user.uid), adminData);
     
     console.log('✅ Admin registered successfully in Firestore');
-    console.log('📧 Admin Email:', ADMIN_EMAIL);
+    console.log('📧 Admin Email for Login:', tempEmail);
+    console.log('📧 Admin Email (Display):', ADMIN_EMAIL);
     console.log('🔑 Admin Password:', ADMIN_PASSWORD);
     console.log('👤 Admin Name: Rakesh Dwarampu');
     console.log('🏥 Admin Role: super_admin');
     console.log('✅ Admin Status: Active');
     console.log('');
     console.log('🎯 Admin can now login to the admin portal at: /admin/login');
-    console.log('⚠️  IMPORTANT: Only this exact email and password combination will work!');
+    console.log('⚠️  IMPORTANT: Use the temporary email and password combination to login!');
+    
+    // Update the admin authentication files to use the temporary email
+    console.log('');
+    console.log('📝 You need to update your authentication files to use:');
+    console.log('   Email:', tempEmail);
+    console.log('   Password:', ADMIN_PASSWORD);
     
   } catch (error) {
-    console.error('❌ Error registering admin:', error.message);
+    console.error('❌ Error creating fresh admin:', error.message);
     if (error.code) {
       console.error('Error code:', error.code);
     }
   }
 }
 
-// Run the registration
-registerAdmin().then(() => {
-  console.log('🏁 Admin registration process completed');
+// Run the creation
+createFreshAdmin().then(() => {
+  console.log('🏁 Fresh admin creation process completed');
   process.exit(0);
 }).catch((error) => {
   console.error('💥 Fatal error:', error);

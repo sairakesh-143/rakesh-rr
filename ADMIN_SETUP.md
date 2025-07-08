@@ -13,7 +13,7 @@ Create a collection called `admins` in your Firestore database with documents us
 // Document ID: {user_uid_from_firebase_auth}
 {
   uid: "sample-admin-uid-123",
-  email: "admin@hospital.com",
+  email: "dwarampudisai@gmail.com",
   name: "Hospital Administrator",
   role: "admin", // or "super_admin"
   isActive: true,
