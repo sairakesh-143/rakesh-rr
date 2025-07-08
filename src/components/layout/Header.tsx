@@ -6,7 +6,7 @@ import { useNotifications } from '@/hooks/use-notifications';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { User, LogOut, Calendar, Search, ChevronDown, Bell, Menu, X, FileText } from 'lucide-react';
+import { User, LogOut, Calendar, ChevronDown, Bell, Menu, X, FileText } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -30,10 +30,16 @@ export const Header = () => {
   };
 
   const navLinks = [
+    { to: "/", label: "Home" },
     { to: "/services", label: "Services" },
     { to: "/doctors", label: "Doctors" },
+    { to: "/appointments", label: "Book Appointment" },
     { to: "/contact", label: "Contact" },
-    ...(user ? [{ to: "/health-records", label: "Health Records" }] : []),
+    ...(user ? [
+      { to: "/my-appointments", label: "My Appointments" },
+      { to: "/health-records", label: "Health Records" },
+      { to: "/profile", label: "My Profile" }
+    ] : []),
   ];
 
   return (
@@ -59,9 +65,14 @@ export const Header = () => {
               <Link
                 key={link.to}
                 to={link.to}
-                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium relative"
               >
                 {link.label}
+                {link.to === "/my-appointments" && unreadCount > 0 && (
+                  <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs w-5 h-5 flex items-center justify-center p-0">
+                    {unreadCount}
+                  </Badge>
+                )}
               </Link>
             ))}
           </nav>
@@ -79,14 +90,19 @@ export const Header = () => {
                   <Link
                     key={link.to}
                     to={link.to}
-                    className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-lg"
+                    className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-lg relative flex items-center"
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link.label}
+                    {link.to === "/my-appointments" && unreadCount > 0 && (
+                      <Badge variant="destructive" className="ml-2 text-xs">
+                        {unreadCount}
+                      </Badge>
+                    )}
                   </Link>
                 ))}
                 
-                {/* Mobile User Menu */}
+                {/* Mobile User Menu - Only show login/logout actions */}
                 {user ? (
                   <div className="border-t pt-6 space-y-4">
                     <div className="flex items-center space-x-3">
@@ -100,38 +116,6 @@ export const Header = () => {
                         {user.displayName || user.email}
                       </span>
                     </div>
-                    
-                    <Link
-                      to="/profile"
-                      className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <User className="w-5 h-5" />
-                      <span>My Profile</span>
-                    </Link>
-                    
-                    <Link
-                      to="/my-appointments"
-                      className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <Calendar className="w-5 h-5" />
-                      <span>My Appointments</span>
-                      {unreadCount > 0 && (
-                        <Badge variant="destructive" className="ml-auto text-xs">
-                          {unreadCount}
-                        </Badge>
-                      )}
-                    </Link>
-                    
-                    <Link
-                      to="/health-records"
-                      className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <FileText className="w-5 h-5" />
-                      <span>Health Records</span>
-                    </Link>
                     
                     <Button
                       variant="ghost"
@@ -164,12 +148,6 @@ export const Header = () => {
           </Sheet>
 
           <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="sm" asChild>
-              <Link to="/search">
-                <Search className="w-4 h-4" />
-              </Link>
-            </Button>
-
             {user ? (
               <div className="flex items-center space-x-2">
                 <DropdownMenu>
