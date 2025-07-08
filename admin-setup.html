@@ -80,8 +80,8 @@
         
         <div class="admin-info">
             <h2>👤 Admin User Details</h2>
-            <p><strong>Email:</strong> dwarampudirakesh@gmail.com</p>
-            <p><strong>Password:</strong> rakesh@1234</p>
+            <p><strong>Email:</strong> <input type="email" id="adminEmail" value="admin.temp.1751968826962@hospital.com"></p>
+            <p><strong>Password:</strong> <input type="password" id="adminPassword" value="rakesh@123"></p>
             <p><strong>Role:</strong> Super Admin</p>
         </div>
 
@@ -136,9 +136,19 @@
         const db = getFirestore(app);
 
         window.createAdminUser = async function() {
-            const adminEmail = "dwarampudirakesh@gmail.com";
-            const adminPassword = "rakesh@1234";
+            const adminEmail = document.getElementById('adminEmail').value;
+            const adminPassword = document.getElementById('adminPassword').value;
             const resultDiv = document.getElementById('result');
+            
+            if (!adminEmail || !adminPassword) {
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        <h3>❌ Missing credentials</h3>
+                        <p>Please provide both email and password.</p>
+                    </div>
+                `;
+                return;
+            }
 
             try {
                 resultDiv.innerHTML = '<p>Creating admin user...</p>';
