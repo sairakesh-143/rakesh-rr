@@ -8,7 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useState } from 'react';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from '@/hooks/use-toast';
@@ -53,6 +54,12 @@ export const AuthForm = ({ onAdminRedirect }: AuthFormProps) => {
     setIsLoading(true);
     try {
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+      
+      // Update last login time
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        lastLoginAt: new Date().toISOString()
+      }, { merge: true });
+      
       setUser(userCredential.user);
       toast({
         title: "Welcome back!",
@@ -80,6 +87,16 @@ export const AuthForm = ({ onAdminRedirect }: AuthFormProps) => {
     setIsLoading(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      
+      // Create user profile in Firestore
+      await setDoc(doc(db, 'users', userCredential.user.uid), {
+        name: data.name,
+        email: data.email,
+        role: 'patient',
+        createdAt: new Date().toISOString(),
+        lastLoginAt: new Date().toISOString()
+      });
+      
       setUser(userCredential.user);
       toast({
         title: "Welcome to CareHub!",
@@ -110,6 +127,26 @@ export const AuthForm = ({ onAdminRedirect }: AuthFormProps) => {
     try {
       const provider = new GoogleAuthProvider();
       const userCredential = await signInWithPopup(auth, provider);
+      
+      // Check if user profile exists in Firestore
+      const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid));
+      
+      if (!userDoc.exists()) {
+        // Create user profile for Google auth users
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          name: userCredential.user.displayName || 'Google User',
+          email: userCredential.user.email,
+          role: 'patient',
+          createdAt: new Date().toISOString(),
+          lastLoginAt: new Date().toISOString()
+        });
+      } else {
+        // Update last login time
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          lastLoginAt: new Date().toISOString()
+        }, { merge: true });
+      }
+      
       setUser(userCredential.user);
       toast({
         title: "Welcome!",

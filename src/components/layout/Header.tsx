@@ -6,15 +6,18 @@ import { useNotifications } from '@/hooks/use-notifications';
 import { signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
-import { User, LogOut, Calendar, Search, ChevronDown, Bell } from 'lucide-react';
+import { User, LogOut, Calendar, Search, ChevronDown, Bell, Menu, X, FileText } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useState } from 'react';
 
 export const Header = () => {
   const { user, setUser } = useAuthStore();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -25,6 +28,13 @@ export const Header = () => {
       console.error('Logout error:', error);
     }
   };
+
+  const navLinks = [
+    { to: "/services", label: "Services" },
+    { to: "/doctors", label: "Doctors" },
+    { to: "/contact", label: "Contact" },
+    ...(user ? [{ to: "/health-records", label: "Health Records" }] : []),
+  ];
 
   return (
     <motion.header
@@ -43,17 +53,115 @@ export const Header = () => {
             </motion.div>
           </Link>
 
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <Link to="/services" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Services
-            </Link>
-            <Link to="/doctors" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Doctors
-            </Link>
-            <Link to="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
-              Contact
-            </Link>
+            {navLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                className="text-gray-700 hover:text-blue-600 transition-colors font-medium"
+              >
+                {link.label}
+              </Link>
+            ))}
           </nav>
+
+          {/* Mobile Navigation */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="sm" className="md:hidden">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px]">
+              <nav className="flex flex-col space-y-6 mt-8">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    className="text-gray-700 hover:text-blue-600 transition-colors font-medium text-lg"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                
+                {/* Mobile User Menu */}
+                {user ? (
+                  <div className="border-t pt-6 space-y-4">
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={user.photoURL || undefined} />
+                        <AvatarFallback className="text-xs">
+                          {user.displayName?.charAt(0) || user.email?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="font-medium">
+                        {user.displayName || user.email}
+                      </span>
+                    </div>
+                    
+                    <Link
+                      to="/profile"
+                      className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <User className="w-5 h-5" />
+                      <span>My Profile</span>
+                    </Link>
+                    
+                    <Link
+                      to="/my-appointments"
+                      className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Calendar className="w-5 h-5" />
+                      <span>My Appointments</span>
+                      {unreadCount > 0 && (
+                        <Badge variant="destructive" className="ml-auto text-xs">
+                          {unreadCount}
+                        </Badge>
+                      )}
+                    </Link>
+                    
+                    <Link
+                      to="/health-records"
+                      className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <FileText className="w-5 h-5" />
+                      <span>Health Records</span>
+                    </Link>
+                    
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="justify-start text-red-600 hover:text-red-600 hover:bg-red-50 w-full"
+                    >
+                      <LogOut className="w-5 h-5 mr-3" />
+                      Logout
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="border-t pt-6 space-y-4">
+                    <Button variant="ghost" asChild className="w-full justify-start">
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                        Login
+                      </Link>
+                    </Button>
+                    <Button asChild className="w-full">
+                      <Link to="/login" onClick={() => setMobileMenuOpen(false)}>
+                        Sign Up
+                      </Link>
+                    </Button>
+                  </div>
+                )}
+              </nav>
+            </SheetContent>
+          </Sheet>
 
           <div className="flex items-center space-x-4">
             <Button variant="ghost" size="sm" asChild>
@@ -95,6 +203,12 @@ export const Header = () => {
                             {unreadCount}
                           </Badge>
                         )}
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/health-records" className="flex items-center gap-2 cursor-pointer">
+                        <FileText className="w-4 h-4" />
+                        Health Records
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />

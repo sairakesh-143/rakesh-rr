@@ -4,7 +4,7 @@ import { ServiceCard } from '@/components/ui/service-card';
 import { DoctorCard } from '@/components/ui/doctor-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   ArrowRight, Heart, Shield, Clock, Users, Calendar, 
   FileText, MessageCircle, Phone, MapPin, Mail,
@@ -75,6 +75,12 @@ const doctors = [
 ];
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
+  const handleDepartmentClick = (department: string) => {
+    navigate(`/doctors?department=${encodeURIComponent(department)}`);
+  };
+
   return (
     <div className="min-h-screen">
       {/* Hero Section - Redesigned */}
@@ -300,6 +306,7 @@ const HomePage = () => {
                   description={service.description}
                   icon={service.icon}
                   index={index}
+                  onLearnMore={() => handleDepartmentClick(service.title)}
                 />
               </motion.div>
             ))}

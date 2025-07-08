@@ -13,6 +13,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useAuthStore } from '@/store/authStore';
 
 const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -40,6 +43,8 @@ const ContactPage = () => {
     { id: 1, sender: 'support', message: 'Hello! How can I help you today?', time: '2:30 PM' }
   ]);
   const [newMessage, setNewMessage] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { user } = useAuthStore();
 
   const { register: registerContact, handleSubmit: handleContactSubmit, formState: { errors: contactErrors }, reset: resetContact } = useForm<ContactForm>({
     resolver: zodResolver(contactSchema)
@@ -49,22 +54,59 @@ const ContactPage = () => {
     resolver: zodResolver(feedbackSchema)
   });
 
-  const onContactSubmit = (data: ContactForm) => {
-    console.log('Contact form submitted:', data);
-    toast({
-      title: "Message Sent!",
-      description: "Thank you for contacting us. We'll get back to you within 24 hours.",
-    });
-    resetContact();
+  const onContactSubmit = async (data: ContactForm) => {
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'contact_messages'), {
+        ...data,
+        userId: user?.uid || null,
+        status: 'new',
+        createdAt: serverTimestamp(),
+        ipAddress: 'user-ip' // You can implement IP detection if needed
+      });
+
+      toast({
+        title: "Message Sent!",
+        description: "Thank you for contacting Dream Team Services Hospital. We'll get back to you within 24 hours.",
+      });
+      resetContact();
+    } catch (error) {
+      console.error('Error submitting contact form:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again or call us directly.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const onFeedbackSubmit = (data: FeedbackForm) => {
-    console.log('Feedback submitted:', data);
-    toast({
-      title: "Feedback Submitted!",
-      description: "Thank you for your feedback. It helps us improve our services.",
-    });
-    resetFeedback();
+  const onFeedbackSubmit = async (data: FeedbackForm) => {
+    setIsSubmitting(true);
+    try {
+      await addDoc(collection(db, 'feedback'), {
+        ...data,
+        userId: user?.uid || null,
+        status: 'new',
+        createdAt: serverTimestamp()
+      });
+
+      toast({
+        title: "Feedback Submitted!",
+        description: "Thank you for your feedback. It helps us improve our services at Dream Team Services Hospital.",
+      });
+      resetFeedback();
+    } catch (error) {
+      console.error('Error submitting feedback:', error);
+      toast({
+        title: "Error",
+        description: "Failed to submit feedback. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const sendChatMessage = () => {
