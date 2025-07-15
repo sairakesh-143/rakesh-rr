@@ -55,7 +55,7 @@ const departmentNames: Record<string, string> = {
   emergency: 'Emergency Care'
 };
 
-const AdminDoctors: React.FC = () => {
+const AdminDoctors = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [filteredDoctors, setFilteredDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
