@@ -23,11 +23,13 @@ export const AdminLayout = () => {
       navigate('/admin/login');
     } catch (error) {
       console.error('Logout error:', error);
+      // Force logout even if Firebase signOut fails
+      logout();
       toast({
-        title: "Error",
-        description: "Failed to logout. Please try again.",
-        variant: "destructive"
+        title: "Logged out",
+        description: "You have been logged out of the admin portal.",
       });
+      navigate('/admin/login');
     }
   };
   return (

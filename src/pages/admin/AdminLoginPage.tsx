@@ -5,14 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { useState, useEffect } from 'react';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuthStore } from '@/store/adminAuth';
 import { toast } from '@/hooks/use-toast';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
-import { Shield, AlertCircle } from 'lucide-react';
+import { Shield, AlertCircle, Lock } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const adminLoginSchema = z.object({
@@ -25,20 +25,48 @@ type AdminLoginForm = z.infer<typeof adminLoginSchema>;
 const AdminLoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const { setUser, checkAdminAccess } = useAdminAuthStore();
+  const { setUser, checkAdminAccess, clearAuthState } = useAdminAuthStore();
+
+  // Clear any existing admin session when component mounts
+  useEffect(() => {
+    const clearSession = async () => {
+      try {
+        await signOut(auth);
+        clearAuthState();
+      } catch (error) {
+        console.error('Error clearing session:', error);
+      }
+    };
+    clearSession();
+  }, [clearAuthState]);
 
   const form = useForm<AdminLoginForm>({
-    resolver: zodResolver(adminLoginSchema)
+    resolver: zodResolver(adminLoginSchema),
+    defaultValues: {
+      email: '',
+      password: ''
+    }
   });
 
   const handleAdminLogin = async (data: AdminLoginForm) => {
     setIsLoading(true);
     try {
+      // Validate credentials client-side first
+      if (data.email !== 'admin.temp.1751968826962@hospital.com' || data.password !== 'rakesh@123') {
+        toast({
+          title: "Access denied",
+          description: "Invalid admin credentials. Only authorized administrators can access this portal.",
+          variant: "destructive"
+        });
+        setIsLoading(false);
+        return;
+      }
+
       // First authenticate with Firebase Auth
       const userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
       
-      // Then check if user is registered as admin in Firestore
-      const isAdmin = await checkAdminAccess(userCredential.user);
+      // Then check if user is registered as admin in Firestore with password validation
+      const isAdmin = await checkAdminAccess(userCredential.user, data.password);
       
       if (isAdmin) {
         setUser(userCredential.user);
@@ -49,10 +77,11 @@ const AdminLoginPage = () => {
         navigate('/admin');
       } else {
         // Sign out the user if they're not an admin
-        await auth.signOut();
+        await signOut(auth);
+        clearAuthState();
         toast({
           title: "Access denied",
-          description: "This account is not registered as an admin user.",
+          description: "This account is not authorized for admin access or invalid credentials.",
           variant: "destructive"
         });
       }
@@ -61,9 +90,9 @@ const AdminLoginPage = () => {
       let errorMessage = error.message;
       
       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found') {
-        errorMessage = "Invalid admin credentials. Please check your email and password.";
+        errorMessage = "Invalid admin credentials. Only authorized administrators can access this portal.";
       } else if (error.code === 'auth/wrong-password') {
-        errorMessage = "Incorrect password. Please try again.";
+        errorMessage = "Incorrect admin password. Please try again.";
       } else if (error.code === 'auth/user-disabled') {
         errorMessage = "This admin account has been disabled. Please contact support.";
       } else if (error.code === 'auth/too-many-requests') {
@@ -75,6 +104,14 @@ const AdminLoginPage = () => {
         description: errorMessage,
         variant: "destructive"
       });
+      
+      // Clear any auth state on error
+      try {
+        await signOut(auth);
+        clearAuthState();
+      } catch (signOutError) {
+        console.error('Error signing out:', signOutError);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -95,17 +132,17 @@ const AdminLoginPage = () => {
             </div>
             <div>
               <CardTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                Admin Portal
+                Secure Admin Portal
               </CardTitle>
               <p className="text-muted-foreground mt-2">Authorized healthcare personnel only</p>
             </div>
           </CardHeader>
           
           <CardContent className="space-y-6">
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Only registered administrators can access this portal. Your credentials must be pre-registered in the system database.
+            <Alert className="border-amber-500/50 bg-amber-500/10">
+              <Lock className="h-4 w-4 text-amber-500" />
+              <AlertDescription className="text-amber-200">
+                <strong>Restricted Access:</strong> Only pre-registered administrators with valid credentials can access this portal. All login attempts are monitored and logged.
               </AlertDescription>
             </Alert>
 
@@ -113,7 +150,7 @@ const AdminLoginPage = () => {
               <div className="space-y-2">
                 <div className="relative">
                   <Input
-                    placeholder="Administrator Email"
+                    placeholder="Administrator Email (dwarampudirakesh@gmail.com)"
                     type="email"
                     {...form.register('email')}
                     className={`transition-smooth ${

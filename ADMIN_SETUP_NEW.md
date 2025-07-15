@@ -1,8 +1,8 @@
 # 🏥 Hospital Admin Setup - UPDATED
 
 ## 👤 Admin User Credentials
-- **Email:** dwarampudisai@gmail.com
-- **Password:** rakesh@123
+- **Email:** dwarampudirakesh@gmail.com
+- **Password:** rakesh@1234
 - **Role:** Super Administrator
 - **Access Level:** Full permissions
 
@@ -25,8 +25,8 @@
 3. Navigate to **Authentication** → **Users**
 4. Click **"Add User"**
 5. Enter:
-   - **Email:** `dwarampudisai@gmail.com`
-   - **Password:** `rakesh@123`
+   - **Email:** `dwarampudirakesh@gmail.com`
+   - **Password:** `rakesh@1234`
 6. Click **"Add User"** and note the generated User ID
 
 #### Step B: Add Admin Permissions
@@ -36,7 +36,7 @@
 
 ```json
 {
-  "email": "dwarampudisai@gmail.com",
+  "email": "dwarampudirakesh@gmail.com",
   "role": "admin",
   "isActive": true,
   "createdAt": "2025-07-08T00:00:00.000Z",
@@ -55,8 +55,8 @@
 
 Once setup is complete:
 - **Admin Login URL:** `http://localhost:8082/admin/login`
-- **Email:** dwarampudisai@gmail.com
-- **Password:** rakesh@123
+- **Email:** dwarampudirakesh@gmail.com
+- **Password:** rakesh@1234
 
 ## 🛡️ Security Features
 

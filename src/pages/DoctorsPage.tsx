@@ -3,13 +3,14 @@ import { DoctorCard } from '@/components/ui/doctor-card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search, Users, UserCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+import { collection, getDocs, query, where, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { toast } from '@/hooks/use-toast';
+import { Badge } from '@/components/ui/badge';
 
 interface Doctor {
   id: string;
@@ -34,59 +35,61 @@ const DoctorsPage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchDoctors = async () => {
-      try {
-        const doctorsRef = collection(db, 'doctors');
-        const activeQuery = query(doctorsRef, where('isActive', '==', true));
-        const doctorsSnapshot = await getDocs(activeQuery);
-        
-        const doctorsData: Doctor[] = [];
-        const specialtySet = new Set<string>();
-        
-        doctorsSnapshot.forEach((doc) => {
-          const data = doc.data() as Doctor;
-          doctorsData.push({
-            id: doc.id,
-            ...data
-          });
-          specialtySet.add(data.specialty);
+    // Set up real-time listener for active doctors
+    const doctorsRef = collection(db, 'doctors');
+    const activeQuery = query(
+      doctorsRef, 
+      where('isActive', '==', true),
+      orderBy('joinedDate', 'desc')
+    );
+    
+    const unsubscribe = onSnapshot(activeQuery, (snapshot) => {
+      const doctorsData: Doctor[] = [];
+      const specialtySet = new Set<string>();
+      
+      snapshot.forEach((doc) => {
+        const data = doc.data() as Doctor;
+        doctorsData.push({
+          id: doc.id,
+          ...data
         });
+        specialtySet.add(data.specialty);
+      });
+      
+      setDoctors(doctorsData);
+      setSpecialties(['All Specialties', ...Array.from(specialtySet)]);
+      setLoading(false);
+      
+      // Check if there's a department parameter from URL
+      const departmentParam = searchParams.get('department');
+      if (departmentParam) {
+        // Map department names to specialty names
+        const departmentToSpecialty: { [key: string]: string } = {
+          'Cardiology': 'Cardiologist',
+          'Neurology': 'Neurologist', 
+          'Pediatrics': 'Pediatrician',
+          'Orthopedics': 'Orthopedic Surgeon',
+          'Oncology': 'Oncologist',
+          'Emergency Care': 'Emergency Medicine'
+        };
         
-        setDoctors(doctorsData);
-        setSpecialties(['All Specialties', ...Array.from(specialtySet)]);
-        
-        // Check if there's a department parameter from URL
-        const departmentParam = searchParams.get('department');
-        if (departmentParam) {
-          // Map department names to specialty names
-          const departmentToSpecialty: { [key: string]: string } = {
-            'Cardiology': 'Cardiologist',
-            'Neurology': 'Neurologist', 
-            'Pediatrics': 'Pediatrician',
-            'Orthopedics': 'Orthopedic Surgeon',
-            'Oncology': 'Oncologist',
-            'Emergency Care': 'Emergency Medicine'
-          };
-          
-          const mappedSpecialty = departmentToSpecialty[departmentParam] || departmentParam;
-          if (specialtySet.has(mappedSpecialty)) {
-            setSelectedSpecialty(mappedSpecialty);
-          }
+        const mappedSpecialty = departmentToSpecialty[departmentParam] || departmentParam;
+        if (specialtySet.has(mappedSpecialty)) {
+          setSelectedSpecialty(mappedSpecialty);
         }
-      } catch (error) {
-        console.error('Error fetching doctors:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load doctors. Please try again.',
-          variant: 'destructive'
-        });
-      } finally {
-        setLoading(false);
       }
-    };
+    }, (error) => {
+      console.error('Error listening to doctors:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load doctors. Please refresh the page.',
+        variant: 'destructive'
+      });
+      setLoading(false);
+    });
 
-    fetchDoctors();
-  }, [searchParams]);
+    return () => unsubscribe();
+  }, [searchParams, toast]);
 
   const filteredDoctors = doctors.filter(doctor => {
     const matchesSearch = doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -104,9 +107,21 @@ const DoctorsPage = () => {
           className="text-center mb-12"
         >
           <h1 className="text-5xl font-bold text-gray-800 mb-6">Our Doctors</h1>
-          <p className="text-xl text-gray-600 max-w-4xl mx-auto">
+          <p className="text-xl text-gray-600 max-w-4xl mx-auto mb-6">
             Meet our team of experienced healthcare professionals dedicated to providing you with the best possible care.
           </p>
+          
+          {/* Doctors Count and Live Update Indicator */}
+          <div className="flex justify-center items-center gap-4 mb-4">
+            <Badge variant="outline" className="text-lg px-4 py-2">
+              <Users className="w-4 h-4 mr-2" />
+              {doctors.length} Doctors Available
+            </Badge>
+            <Badge variant="secondary" className="text-sm px-3 py-1">
+              <UserCheck className="w-3 h-3 mr-1" />
+              Live Updates
+            </Badge>
+          </div>
         </motion.div>
 
         {/* Search and Filter */}

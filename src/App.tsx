@@ -58,23 +58,29 @@ const ProtectedAdminRoute = ({ children }: { children: React.ReactNode }) => {
 
 const App = () => {
   const { setUser, setLoading } = useAuthStore();
-  const { setUser: setAdminUser, checkAdminAccess } = useAdminAuthStore();
+  const { setUser: setAdminUser, checkAdminAccess, clearAuthState } = useAdminAuthStore();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
       setLoading(false);
       
-      // Check admin access when user state changes
+      // Check if user has admin access and update admin state accordingly
       if (user) {
-        await checkAdminAccess(user);
+        const hasAdminAccess = await checkAdminAccess(user);
+        if (hasAdminAccess) {
+          setAdminUser(user);
+        } else {
+          setAdminUser(null);
+        }
       } else {
         setAdminUser(null);
+        clearAuthState();
       }
     });
 
     return () => unsubscribe();
-  }, [setUser, setLoading, setAdminUser, checkAdminAccess]);
+  }, [setUser, setLoading, setAdminUser, checkAdminAccess, clearAuthState]);
 
   return (
     <QueryClientProvider client={queryClient}>
