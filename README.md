@@ -43,10 +43,10 @@ Follow these steps to set up the project locally:
 
 ```sh
 # Step 1: Clone the repository
-git clone <YOUR_GIT_URL>
+git clone https://github.com/sairakesh-143/rakesh-rr.git
 
 # Step 2: Navigate to the project directory
-cd health-nexus-ui-pro-14
+cd rakesh-rr
 
 # Step 3: Install dependencies
 npm install
