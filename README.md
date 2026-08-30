@@ -5,7 +5,7 @@ A modern hospital management system built with React, TypeScript, and Tailwind C
 ## Project Info
 
 **Developer**: Rakesh Reddy  
-**Organization**: Dream Team Services  
+**Organization**: rakesh  
 **Project**: Hospital Management System - Health Nexus UI Pro  
 
 ## About
