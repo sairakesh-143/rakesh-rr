@@ -82,6 +82,7 @@ export const Footer = () => {
 
         <div className="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
           <p>&copy; {new Date().getFullYear()} <Link to="/" className="hover:text-blue-400 transition-colors">CareHub Hospital</Link>. All rights reserved.</p>
+          <p className="mt-1 text-sm text-gray-500">Developed by <span className="text-gray-300 font-medium">Rakesh Reddy</span></p>
         </div>
       </div>
     </motion.footer>
