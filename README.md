@@ -82,11 +82,9 @@ src/
 
 ## Contributing
 
-This project is developed and maintained by Rakesh Reddy from Dream Team Services. For inquiries about customization, support, or enterprise solutions, please contact Dream Team Services.
+This project is developed and maintained by Rakesh Reddy. For inquiries about customization, support, or enterprise solutions, please contact me
 
-## License
-
-© 2025 Dream Team Services. All rights reserved.  
+## License  
 Developed by Rakesh Reddy
 
 ---
