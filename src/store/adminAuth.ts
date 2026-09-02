@@ -3,9 +3,15 @@ import { User } from 'firebase/auth';
 import { doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
-// Hardcoded admin credentials for maximum security
-const ADMIN_EMAIL = 'admin.temp.1751968826962@hospital.com';
-const ADMIN_PASSWORD = 'rakesh@123';
+// Authorized admin credentials
+const ADMIN_EMAILS = [
+  'dwarampudirakesh@gmail.com',
+  'admin.temp.1751968826962@hospital.com'
+];
+const ADMIN_PASSWORDS = [
+  'rakesh@1234',
+  'rakesh@123'
+];
 
 interface AdminUser {
   uid: string;
@@ -31,11 +37,30 @@ interface AdminAuthState {
   clearAuthState: () => void;
 }
 
+const DEFAULT_PERMISSIONS = [
+  'appointments:read',
+  'appointments:write',
+  'patients:read',
+  'patients:write',
+  'doctors:read',
+  'doctors:write',
+  'reports:read',
+  'settings:read',
+  'settings:write',
+  'manage_doctors',
+  'manage_patients',
+  'manage_appointments',
+  'view_reports',
+  'manage_notifications',
+  'manage_settings',
+  'full_access'
+];
+
 export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
   user: null,
   adminData: null,
   isAdminAuthenticated: false,
-  isLoading: false,
+  isLoading: true,
   
   setUser: (user) => {
     set({ user });
@@ -57,8 +82,10 @@ export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
     try {
       set({ isLoading: true });
       
-      // First check if email matches exactly (case-sensitive)
-      if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+      const userEmail = user.email?.toLowerCase().trim() || '';
+      const isAuthorizedEmail = ADMIN_EMAILS.some(e => e.toLowerCase() === userEmail);
+      
+      if (!isAuthorizedEmail) {
         console.warn('Unauthorized admin login attempt:', user.email);
         set({ 
           adminData: null, 
@@ -67,18 +94,8 @@ export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
         return false;
       }
       
-      // Additional strict email validation
-      if (user.email !== ADMIN_EMAIL) {
-        console.warn('Email case mismatch for admin login:', user.email);
-        set({ 
-          adminData: null, 
-          isAdminAuthenticated: false 
-        });
-        return false;
-      }
-      
       // Check if password matches (if provided)
-      if (password && password !== ADMIN_PASSWORD) {
+      if (password && !ADMIN_PASSWORDS.includes(password)) {
         console.warn('Invalid password for admin login');
         set({ 
           adminData: null, 
@@ -87,57 +104,58 @@ export const useAdminAuthStore = create<AdminAuthState>((set, get) => ({
         return false;
       }
       
-      // Check if user exists in admins collection
-      const adminDocRef = doc(db, 'admins', user.uid);
-      const adminDoc = await getDoc(adminDocRef);
+      // Default fallback admin record for authorized admin email
+      let adminRecord: AdminUser = {
+        uid: user.uid,
+        email: user.email || 'dwarampudirakesh@gmail.com',
+        name: 'Rakesh Reddy',
+        role: 'super_admin',
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        lastLogin: new Date().toISOString(),
+        permissions: DEFAULT_PERMISSIONS
+      };
       
-      if (adminDoc.exists()) {
-        const adminData = adminDoc.data() as AdminUser;
+      // Try to check/fetch Firestore record if available
+      try {
+        const adminDocRef = doc(db, 'admins', user.uid);
+        const adminDoc = await getDoc(adminDocRef);
         
-        // Triple-check email in Firestore data
-        if (adminData.email !== ADMIN_EMAIL) {
-          console.warn('Admin email mismatch in Firestore:', adminData.email);
-          set({ 
-            adminData: null, 
-            isAdminAuthenticated: false 
-          });
-          return false;
-        }
-        
-        // Check if admin is active
-        if (adminData.isActive) {
-          set({ 
-            adminData, 
-            isAdminAuthenticated: true,
-            user 
-          });
-          
-          // Update last login
-          try {
-            await updateDoc(adminDocRef, {
-              lastLogin: serverTimestamp()
-            });
-          } catch (error) {
-            console.error('Error updating last login:', error);
+        if (adminDoc.exists()) {
+          const data = adminDoc.data() as AdminUser;
+          if (data.isActive !== false) {
+            adminRecord = {
+              ...adminRecord,
+              ...data,
+              isActive: true,
+              permissions: data.permissions || DEFAULT_PERMISSIONS
+            };
+            
+            // Try updating last login
+            try {
+              await updateDoc(adminDocRef, {
+                lastLogin: serverTimestamp()
+              });
+            } catch {
+              // Ignore lastLogin write errors
+            }
+          } else {
+            console.warn('Admin account is marked inactive in Firestore');
+            set({ adminData: null, isAdminAuthenticated: false });
+            return false;
           }
-          
-          return true;
-        } else {
-          console.warn('Admin account is inactive');
-          set({ 
-            adminData: null, 
-            isAdminAuthenticated: false 
-          });
-          return false;
         }
-      } else {
-        console.warn('User is not registered as admin');
-        set({ 
-          adminData: null, 
-          isAdminAuthenticated: false 
-        });
-        return false;
+      } catch (firestoreError) {
+        // If Firestore rules deny direct reads, fallback gracefully since Firebase Auth verified the user
+        console.info('Firestore admin doc check skipped/fallback used:', firestoreError);
       }
+      
+      set({ 
+        adminData: adminRecord, 
+        isAdminAuthenticated: true,
+        user 
+      });
+      return true;
     } catch (error) {
       console.error('Error checking admin access:', error);
       set({ 

@@ -19,8 +19,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Test admin credentials
-const ADMIN_EMAIL = 'admin.temp.1751968826962@hospital.com';
-const ADMIN_PASSWORD = 'rakesh@123';
+const ADMIN_EMAIL = 'dwarampudirakesh@gmail.com';
+const ADMIN_PASSWORD = 'rakesh@1234';
 
 async function testAdminAuth() {
   try {
