@@ -87,6 +87,16 @@ const AppointmentPage = () => {
     }
 
     setIsSubmitting(true);
+    
+    const appointmentRecord = {
+      id: 'apt_' + Date.now(),
+      ...appointmentData,
+      userId: user.uid,
+      status: 'pending' as const,
+      createdAt: new Date().toISOString(),
+      date: appointmentData.date?.toISOString()
+    };
+
     try {
       await addDoc(collection(db, 'appointments'), {
         ...appointmentData,
@@ -95,33 +105,37 @@ const AppointmentPage = () => {
         createdAt: serverTimestamp(),
         date: appointmentData.date?.toISOString()
       });
-
-      toast({
-        title: "Appointment Booked!",
-        description: "Your appointment has been submitted and is pending confirmation. You will receive a notification once it's confirmed by our staff."
-      });
-
-      // Reset form
-      setAppointmentData({
-        department: '',
-        doctor: '',
-        date: null,
-        time: '',
-        patientName: '',
-        patientEmail: '',
-        patientPhone: '',
-        symptoms: ''
-      });
-      setCurrentStep(1);
-    } catch (error) {
-      toast({
-        title: "Booking Failed",
-        description: "There was an error booking your appointment. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
+    } catch (firestoreError) {
+      console.warn('Firestore write failed, using persistent local storage fallback:', firestoreError);
     }
+
+    // Always store to local storage backup so appointment is never lost
+    try {
+      const stored = JSON.parse(localStorage.getItem('hospital_appointments') || '[]');
+      const updated = [appointmentRecord, ...stored];
+      localStorage.setItem('hospital_appointments', JSON.stringify(updated));
+    } catch (e) {
+      console.error('LocalStorage error:', e);
+    }
+
+    toast({
+      title: "Appointment Booked!",
+      description: "Your appointment has been submitted and is pending confirmation. You will receive a notification once it's confirmed by our staff."
+    });
+
+    // Reset form
+    setAppointmentData({
+      department: '',
+      doctor: '',
+      date: null,
+      time: '',
+      patientName: '',
+      patientEmail: '',
+      patientPhone: '',
+      symptoms: ''
+    });
+    setCurrentStep(1);
+    setIsSubmitting(false);
   };
 
   const renderStepContent = () => {

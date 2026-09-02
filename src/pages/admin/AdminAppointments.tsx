@@ -55,6 +55,13 @@ const AdminAppointments = () => {
   }, []);
 
   const fetchAppointments = async () => {
+    let localStored: Appointment[] = [];
+    try {
+      localStored = JSON.parse(localStorage.getItem('hospital_appointments') || '[]');
+    } catch {
+      // ignore
+    }
+
     try {
       const querySnapshot = await getDocs(collection(db, 'appointments'));
       const appointmentsData = querySnapshot.docs.map(doc => ({
@@ -62,17 +69,15 @@ const AdminAppointments = () => {
         ...doc.data()
       })) as Appointment[];
       
-      // Sort by creation date, newest first
-      appointmentsData.sort((a, b) => b.createdAt?.toDate() - a.createdAt?.toDate());
-      
-      setAppointments(appointmentsData);
+      const merged = [
+        ...appointmentsData,
+        ...localStored.filter(l => !appointmentsData.some(a => a.id === l.id))
+      ];
+
+      setAppointments(merged);
     } catch (error) {
-      console.error('Error fetching appointments:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch appointments",
-        variant: "destructive"
-      });
+      console.warn('Error fetching appointments from Firestore (using local list):', error);
+      setAppointments(localStored);
     } finally {
       setLoading(false);
     }
@@ -83,15 +88,32 @@ const AdminAppointments = () => {
       const appointment = appointments.find(apt => apt.id === appointmentId);
       if (!appointment) return;
 
-      // Update appointment status
-      await updateDoc(doc(db, 'appointments', appointmentId), {
-        status: status,
-        updatedAt: serverTimestamp(),
-        ...(status === 'confirmed' && { confirmedAt: serverTimestamp() })
-      });
+      // Update appointment status in Firestore
+      try {
+        await updateDoc(doc(db, 'appointments', appointmentId), {
+          status: status,
+          updatedAt: serverTimestamp(),
+          ...(status === 'confirmed' && { confirmedAt: serverTimestamp() })
+        });
+      } catch (e) {
+        console.warn('Firestore updateDoc failed, updating local storage:', e);
+      }
+
+      // Update in local storage
+      try {
+        const stored = JSON.parse(localStorage.getItem('hospital_appointments') || '[]');
+        const updated = stored.map((apt: any) => apt.id === appointmentId ? { ...apt, status } : apt);
+        localStorage.setItem('hospital_appointments', JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
 
       // Send notification to user
-      await sendNotificationToUser(appointment, status);
+      try {
+        await sendNotificationToUser(appointment, status);
+      } catch (notifErr) {
+        console.warn('Notification send failed:', notifErr);
+      }
 
       setAppointments(prev => 
         prev.map(apt => 

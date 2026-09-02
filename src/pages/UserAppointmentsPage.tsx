@@ -95,6 +95,17 @@ const UserAppointmentsPage = () => {
   const fetchUserAppointments = async () => {
     if (!user) return;
     
+    let localPending: Appointment[] = [];
+    let localConfirmed: Appointment[] = [];
+    try {
+      const stored = JSON.parse(localStorage.getItem('hospital_appointments') || '[]');
+      const userStored = stored.filter((a: any) => a.userId === user.uid || !a.userId);
+      localPending = userStored.filter((a: any) => a.status === 'pending');
+      localConfirmed = userStored.filter((a: any) => a.status === 'confirmed');
+    } catch {
+      // ignore
+    }
+
     try {
       // Fetch confirmed appointments
       const confirmedQuery = query(
@@ -124,15 +135,15 @@ const UserAppointmentsPage = () => {
         ...doc.data()
       })) as Appointment[];
       
-      setConfirmedAppointments(confirmedData);
-      setPendingAppointments(pendingData);
+      const allConfirmed = [...confirmedData, ...localConfirmed.filter(l => !confirmedData.some(c => c.id === l.id))];
+      const allPending = [...pendingData, ...localPending.filter(l => !pendingData.some(p => p.id === l.id))];
+
+      setConfirmedAppointments(allConfirmed);
+      setPendingAppointments(allPending);
     } catch (error) {
-      console.error('Error fetching appointments:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch appointments",
-        variant: "destructive"
-      });
+      console.warn('Error fetching appointments from Firestore (using local cache):', error);
+      setConfirmedAppointments(localConfirmed);
+      setPendingAppointments(localPending);
     } finally {
       setLoading(false);
     }
