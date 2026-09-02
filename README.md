@@ -66,18 +66,24 @@ npm run dev
 ## Project Structure
 
 ```
-src/
-├── components/     # Reusable UI components
-│   ├── admin/      # Admin-specific components
-│   ├── appointment/# Appointment-related components
-│   ├── auth/       # Authentication components
-│   ├── layout/     # Layout components
-│   └── ui/         # UI component library
-├── hooks/          # Custom React hooks
-├── lib/            # Utility functions and configurations
-├── pages/          # Page components
-├── store/          # State management
-└── main.tsx        # Application entry point
+rakesh-rr/
+├── docs/           # Documentation, guides & security policies
+├── scripts/        # Setup, test & admin utility scripts
+├── public/         # Static assets and icons
+├── src/
+│   ├── components/ # Reusable UI components
+│   │   ├── admin/  # Admin-specific components
+│   │   ├── appointment/ # Appointment workflow components
+│   │   ├── auth/   # Authentication components
+│   │   ├── layout/ # Header, Footer & AdminLayout
+│   │   └── ui/     # shadcn / Radix UI component library
+│   ├── hooks/      # Custom React hooks
+│   ├── lib/        # Firebase & utility configurations
+│   ├── pages/      # Route page components
+│   ├── store/      # Zustand state stores (auth & adminAuth)
+│   └── main.tsx    # Application entry point
+├── vercel.json     # Vercel deployment & SPA routing rewrites
+└── package.json    # Project dependencies and scripts
 ```
 
 ## Contributing
